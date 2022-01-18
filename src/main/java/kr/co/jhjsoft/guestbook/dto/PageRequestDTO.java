@@ -16,7 +16,10 @@ public class PageRequestDTO {
     private  int page;
     //페이지 당 출력 개수
     private  int size;
-
+    //검색 항목
+    private  String type;
+    //검색 할 키워드
+    private  String keyword;
     //매개변수가 없는 생성자 - default constructor
     public PageRequestDTO(){
         page = 1;

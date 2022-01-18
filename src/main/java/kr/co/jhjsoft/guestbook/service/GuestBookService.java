@@ -27,4 +27,10 @@ public interface GuestBookService {
     //상세보기를 위한 메서드
     public GuestBookDTO read(Long gno);
 
+    //데이터 수정을 위한 메서드
+    public void modify(GuestBookDTO dto);
+
+    //데이터 삭제를 위한 메서드
+    public void remove(Long gno);
+
 }

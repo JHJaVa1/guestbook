@@ -12,8 +12,28 @@
                 </a>
             </span>
         </h1>
+        <form action="/guestbook/list" method="get" id="searchForm">
+            <div class="input-group">
+                <input type="hidden" name="page" value = "1">
+                <div class="input-group-prepend">
+                    <select class="custom-select" name="type">
+                        <option th:selected="${pageRequestDTO.type == null}">-------</option>
+                        <option value="t" th:selected="${pageRequestDTO.type =='t'}" >제목</option>
+                        <option value="c" th:selected="${pageRequestDTO.type =='c'}"  >내용</option>
+                        <option value="w"  th:selected="${pageRequestDTO.type =='w'}" >작성자</option>
+                        <option value="tc"  th:selected="${pageRequestDTO.type =='tc'}" >제목 + 내용</option>
+                        <option value="tcw"  th:selected="${pageRequestDTO.type =='tcw'}" >제목 + 내용 + 작성자</option>
+                    </select>
+                </div>
+                <input class="form-control" name="keyword" th:value="${pageRequestDTO.keyword}">
+                <div class="input-group-append" id="button-addon4">
+                    <button class="btn btn-outline-secondary btn-search" type="button">Search</button>
+                    <button class="btn btn-outline-secondary btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+        </form>
 
-        <table class="table table-striped">
+                <table class="table table-striped">
             <thead>
             <tr>
                 <th scope="col">#</th>
@@ -24,7 +44,10 @@
             </thead>
             <tbody>
             <tr th:each="dto : ${result.dtoList}" >
-                <th scope="row"><a th:href="@{/guestbook/read(gno=${dto.gno},page=${result.page})}">[[${dto.gno}]]</a> </th>
+                <th scope="row"><a th:href="@{/guestbook/read(gno = ${dto.gno}, page=${result.page} , type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">
+                    [[${dto.gno}]]
+                </a>
+                </th>
                 <td>[[${dto.title}]]</td>
                 <td>[[${dto.writer}]]</td>
                 <td>[[${#temporals.format(dto.regDate, 'yyyy/MM/dd')}]]</td>
@@ -34,20 +57,19 @@
         </table>
         <!-- 페이지 번호 출력 -->
         <ul class="pagination h-100 justify-content-center align-items-center">
-            <!--이전 링크 출력 -->
+
             <li class="page-item " th:if="${result.prev}">
-                <a class="page-link" th:href="@{/guestbook/list(page= ${result.start -1})}" tabindex="-1">이전</a>
+                <a class="page-link" th:href="@{/guestbook/list(page= ${result.start -1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}" tabindex="-1">이전</a>
             </li>
-            <!-- 페이지 번호 목록 출력
-            현재 페이지 번호는 active 클래스를 추가해서 비 활성화 -->
+
             <li th:class=" 'page-item ' + ${result.page == page?'active':''} " th:each="page: ${result.pageList}">
-                <a class="page-link" th:href="@{/guestbook/list(page = ${page})}">
+                <a class="page-link" th:href="@{/guestbook/list(page = ${page}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">
                     [[${page}]]
                 </a>
             </li>
-            <!--다음 링크 출력-->
+
             <li class="page-item" th:if="${result.next}">
-                <a class="page-link" th:href="@{/guestbook/list(page= ${result.end + 1})}">다음</a>
+                <a class="page-link" th:href="@{/guestbook/list(page= ${result.end + 1}, type=${pageRequestDTO.type}, keyword=${pageRequestDTO.keyword})}">다음</a>
             </li>
 
         </ul>
@@ -81,6 +103,15 @@
             if(msg){
                 $(".modal").modal();
             }
+
+            //검색 폼 가져오기
+            var searchForm = $("#searchForm");
+            $(".btn-search").click(function (e) {
+                searchForm.submit();
+            });
+            $(".btn-clear").click(function (e) {
+                searchForm.empty().submit();
+            });
         </script>
 
 

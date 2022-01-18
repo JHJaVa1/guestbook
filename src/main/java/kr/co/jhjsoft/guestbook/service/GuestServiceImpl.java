@@ -1,9 +1,12 @@
 package kr.co.jhjsoft.guestbook.service;
 
+import com.querydsl.core.BooleanBuilder;
+import javassist.compiler.ast.Keyword;
 import kr.co.jhjsoft.guestbook.dto.GuestBookDTO;
 import kr.co.jhjsoft.guestbook.dto.PageRequestDTO;
 import kr.co.jhjsoft.guestbook.dto.PageResponseDTO;
 import kr.co.jhjsoft.guestbook.entity.GuestBook;
+import kr.co.jhjsoft.guestbook.entity.QGuestBook;
 import kr.co.jhjsoft.guestbook.repository.GuestBookRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -39,7 +42,9 @@ public class GuestServiceImpl implements GuestBookService{
         //Pageable 객체 생성
         Pageable pageable = requestDTO.getPageable(Sort.by("gno").descending());
         //결과를 가져오기
-        Page<GuestBook> result = repository.findAll(pageable);
+        //Page<GuestBook> result = repository.findAll(pageable);
+        BooleanBuilder booleanBuilder = getSearch(requestDTO);
+        Page<GuestBook> result = repository.findAll(booleanBuilder,pageable);
         //Function 생성
         Function<GuestBook, GuestBookDTO> fn = (entity -> entityToDTO(entity));
         return new PageResponseDTO<>(result, fn);
@@ -49,5 +54,52 @@ public class GuestServiceImpl implements GuestBookService{
     public GuestBookDTO read(Long gno) {
         Optional<GuestBook> guestBook = repository.findById(gno);
         return guestBook.isPresent()?entityToDTO(guestBook.get()):null;
+    }
+
+    @Override
+    public void modify(GuestBookDTO dto) {
+        //수정할 데이터를 찾아오기
+        Optional<GuestBook> result = repository.findById(dto.getGno());
+        if(result.isPresent()){
+            GuestBook entity = result.get();
+            entity.changeTitle(dto.getTitle());
+            entity.changeContent(dto.getContent());
+            repository.save(entity);
+
+        }
+    }
+
+    @Override
+    public void remove(Long gno) {
+        Optional<GuestBook> result = repository.findById(gno);
+        if(result.isPresent()){
+            repository.deleteById(gno);
+        }
+    }
+
+    private BooleanBuilder getSearch(PageRequestDTO requestDTO){
+        String type = requestDTO.getType();
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        QGuestBook qGuestBook = QGuestBook.guestBook;
+        String keyword = requestDTO.getKeyword();
+
+        if(type == null || type.trim().length() == 0){
+            return booleanBuilder;
+        }
+        BooleanBuilder conditionBuilder = new BooleanBuilder();
+        //t c w 는 검색 화면에서 select의 option들의 value가 되어야 한다
+
+        if (type.contains("t")){
+            conditionBuilder.or(qGuestBook.title.contains(keyword));
+        }
+        if (type.contains("c")){
+            conditionBuilder.or(qGuestBook.content.contains(keyword));
+        }
+        if (type.contains("w")){
+            conditionBuilder.or(qGuestBook.writer.contains(keyword));
+        }
+        //모든 조건 통합
+        booleanBuilder.and(conditionBuilder);
+        return booleanBuilder;
     }
 }
